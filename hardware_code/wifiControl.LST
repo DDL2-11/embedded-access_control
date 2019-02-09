@@ -1,0 +1,124 @@
+C51 COMPILER V9.01   WIFICONTROL                                                           02/09/2019 18:52:39 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE WIFICONTROL
+OBJECT MODULE PLACED IN wifiControl.OBJ
+COMPILER INVOKED BY: E:\keil_class\C51\BIN\C51.EXE wifiControl.c BROWSE DEBUG OBJECTEXTEND TABS(2)
+
+line level    source
+
+   1          #include  <string.h>
+   2          #include  "STC15Fxxxx.H"
+*** WARNING C322 IN LINE 532 OF STC15Fxxxx.H: unknown identifier
+*** WARNING C322 IN LINE 534 OF STC15Fxxxx.H: unknown identifier
+*** WARNING C322 IN LINE 536 OF STC15Fxxxx.H: unknown identifier
+*** WARNING C322 IN LINE 538 OF STC15Fxxxx.H: unknown identifier
+*** WARNING C322 IN LINE 540 OF STC15Fxxxx.H: unknown identifier
+*** WARNING C322 IN LINE 542 OF STC15Fxxxx.H: unknown identifier
+*** WARNING C322 IN LINE 544 OF STC15Fxxxx.H: unknown identifier
+   3          
+   4          typedef unsigned char uchar;
+   5          
+   6          u8 ptr;         //receive pointer
+   7          u8 receive[50];
+   8          u16 control_status;
+   9          
+  10          void setStatus(u8 sta)
+  11          {
+  12   1        control_status = sta;
+  13   1      }
+  14          
+  15          
+  16          void connect_init()
+  17          {
+  18   1        char *e = "AT+CIPMUX=1\r\n";
+  19   1        char *f = "AT+CIPSERVER=1,8080\r\n";
+  20   1        
+  21   1        while(*e != '\0') {
+  22   2          SBUF = *e;
+  23   2          while(!TI);
+  24   2          TI = 0;
+  25   2          e++;
+  26   2        }
+  27   1        delay_ms(10);
+*** WARNING C206 IN LINE 27 OF WIFICONTROL.C: 'delay_ms': missing function-prototype
+*** ERROR C267 IN LINE 27 OF WIFICONTROL.C: 'delay_ms': requires ANSI-style prototype
+  28   1        while(*f != '\0') {
+  29   2          SBUF = *f;
+  30   2          while(!TI);
+  31   2          TI = 0;
+  32   2          f++;
+  33   2        }
+  34   1      }
+  35          
+  36          void UartConfiguration()
+  37          {
+  38   1        TMOD = 0x20;  //timer1 mode2
+  39   1        TH1 = 0xfd;   //timer1 init
+  40   1        TL1 = 0xfd;   //timer1 init
+  41   1        PCON = 0x00;  //baud no multi
+  42   1        SCON = 0x50;  //mode1 receive open
+  43   1        ES = 1;       //ttl interrupt ok
+  44   1        TR1 = 1;      //timer1 run
+  45   1      }
+  46          
+C51 COMPILER V9.01   WIFICONTROL                                                           02/09/2019 18:52:39 PAGE 2   
+
+  47          void esp8266_init()
+  48          {
+  49   1        UartConfiguration();
+  50   1        TI = 0;
+  51   1        connect_init();
+  52   1      }
+  53          
+  54          void sendInt(u16 i)
+  55          {
+  56   1        ES = 0;
+  57   1        SBUF = i;
+  58   1        while(!TI);
+  59   1        TI = 0;
+  60   1        ES = 1;
+  61   1      }
+  62          
+  63          void Uart() interrupt 4
+  64          {
+  65   1        sizeof(j);
+*** ERROR C202 IN LINE 65 OF WIFICONTROL.C: 'j': undefined identifier
+  66   1        char *send = "AT+CIPSEND=0,4\r\n";
+*** ERROR C141 IN LINE 66 OF WIFICONTROL.C: syntax error near 'char'
+*** ERROR C202 IN LINE 66 OF WIFICONTROL.C: 'send': undefined identifier
+  67   1        char res;
+*** ERROR C141 IN LINE 67 OF WIFICONTROL.C: syntax error near 'char'
+*** ERROR C202 IN LINE 67 OF WIFICONTROL.C: 'res': undefined identifier
+  68   1        res = SBUF;
+*** ERROR C202 IN LINE 68 OF WIFICONTROL.C: 'res': undefined identifier
+  69   1        RI = 0;
+  70   1        if (res==':'||ptr>0) {
+*** ERROR C202 IN LINE 70 OF WIFICONTROL.C: 'res': undefined identifier
+  71   2          if (res == '\n') {
+*** ERROR C202 IN LINE 71 OF WIFICONTROL.C: 'res': undefined identifier
+  72   3            if (*receive == ":gettemp") {
+  73   4              while(*send != '\0') {
+*** ERROR C202 IN LINE 73 OF WIFICONTROL.C: 'send': undefined identifier
+  74   5                SBUF = *send;
+*** ERROR C202 IN LINE 74 OF WIFICONTROL.C: 'send': undefined identifier
+  75   5                while(!TI);
+  76   5                TI = 0;
+  77   5                send++;
+*** ERROR C202 IN LINE 77 OF WIFICONTROL.C: 'send': undefined identifier
+  78   5              }
+  79   4              delay_ms(10);
+  80   4              sendInt(temperature);
+*** ERROR C202 IN LINE 80 OF WIFICONTROL.C: 'temperature': undefined identifier
+  81   4            }
+  82   3            ptr = 0;
+  83   3            memset(receive,0,50);
+  84   3          } else {
+  85   3            receive[ptr] = res;
+*** ERROR C202 IN LINE 85 OF WIFICONTROL.C: 'res': undefined identifier
+  86   3            ptr++;
+  87   3          }
+  88   2        }
+  89   1      }
+
+C51 COMPILATION COMPLETE.  8 WARNING(S),  14 ERROR(S)

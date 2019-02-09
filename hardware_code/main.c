@@ -1,8 +1,9 @@
 #define MAIN_Fosc		22118400L	//定义主时钟
 
+#include <string.h>
 #include	"STC15Fxxxx.H"
 
-
+typedef unsigned char  uchar;
 
 
 /***********************************************************/
@@ -73,6 +74,11 @@ bit B_TX1_Busy; //发送忙标志
 u8  idata RX1_Buffer[UART1_BUF_LENGTH]; //接收缓冲
 u8* Send_String;
 
+u8 ptr; //接收ptr
+u8 control_status; //控制状态
+u8 control_order[10];
+
+
 
 /*************	本地函数声明	**************/
 void	CalculateAdcKey(u16 adc);
@@ -97,6 +103,16 @@ u16		Get_ADC10bitResult(u8 channel);	//channel = 0~7
 void    UART1_config(u8 brt);   // 选择波特率, 2: 使用Timer2做波特率, 其它值: 使用Timer1做波特率.
 void    PrintString1(u8 *puts);
 u8		*my_itoa(u16 n);
+//wifi模块
+void connect_init(); 
+void UartConfiguration();
+void esp8266_init();
+void  set_Status(); //设置状态 用于移动端控制
+void sendStatus(u8 sta);
+void Uart();
+
+
+
 										   
 /****************  外部函数声明和外部变量声明 *****************/
 
@@ -135,7 +151,7 @@ void main(void)
 	
 	for(i=0; i<8; i++)	LED8[i] = 0x10;	//上电消隐
 
-	
+	esp8266_init();
 	ReadRTC();
 	F0 = 0;
 	month = 1;
@@ -169,6 +185,7 @@ void main(void)
 	{
 		if(B_1ms)	//1ms到
 		{
+			set_Status();
 			if(open == 1) opentime++;
 			else opentime = 0;
 			if(opentime >= 2000) reKey();
@@ -309,6 +326,8 @@ void main(void)
 				KeyCode = 0;
 	  
 			}
+			//每个循环与移动端进行通信
+			Uart();
 
 		}
 	}
@@ -645,3 +664,106 @@ u8 *my_itoa(u16 n)
     s[i] = '\0';    //最后加上字符串结束符
     return reverse(s);
 }
+
+//移动端控制
+
+void connect_init()
+{
+	char *e = "AT+CIPMUX=1\r\n";
+	char *f = "AT+CIPSERVER=1,8080\r\n";
+	
+	while(*e != '\0') {
+		SBUF = *e;
+		while(!TI);
+		TI = 0;
+		e++;
+	}
+	delay_ms(10);
+	while(*f != '\0') {
+		SBUF = *f;
+		while(!TI);
+		TI = 0;
+		f++;
+	}
+}
+
+void set_Status(){  //设置状态 用于移动端控制
+	u8 newStatus = SBUF;
+	if(newStatus == 1){
+		 open = 1;
+		 curr_state = 1;
+	}
+	else if(newStatus == 0){
+		 open = 0;
+		 curr_state = 0;
+	}
+	else{
+		//不操作
+	}
+}	
+
+void UartConfiguration()
+{
+	TMOD = 0x20;	//timer1 mode2
+	TH1 = 0xfd;		//timer1 init
+	TL1 = 0xfd;		//timer1 init
+	PCON = 0x00;	//baud no multi
+	SCON = 0x50;	//mode1 receive open
+	ES = 1;				//ttl interrupt ok
+	TR1 = 1;			//timer1 run
+}
+
+void esp8266_init()
+{
+	UartConfiguration();
+	TI = 0;
+	connect_init();
+}
+
+
+void sendStatus(u8 sta)
+{
+	ES = 0;
+	SBUF = sta;
+	while(!TI);
+	TI = 0;
+	ES = 1;
+}
+
+
+void Uart() interrupt 4
+{
+	char *send = "AT+CIPSEND=0,4\r\n";
+	char res;
+	res = SBUF;
+	RI = 0;
+	if (res==':'||ptr>0) {
+		if (res == '\n') {
+			if (*control_order == ":get") {
+				while(*send != '\0') {
+					SBUF = *send;
+					while(!TI);
+					TI = 0;
+					send++;
+				}
+				delay_ms(10);
+				sendStatus(curr_state);
+			}
+			ptr = 0;
+			memset(control_order,0,10);
+		} else {
+			control_order[ptr] = res;
+			ptr++;
+		}
+	}
+}
+
+
+/*
+void UartConfiguration();
+void esp8266_init();
+void  set_Status(u8 newStatus);
+void sentInt(u16 i);
+void Uart();
+
+*/

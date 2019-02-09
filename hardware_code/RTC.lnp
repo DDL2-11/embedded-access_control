@@ -1,0 +1,7 @@
+"main.obj",
+"temp.obj",
+"time.obj",
+"fixFunc.obj",
+"display.obj" 
+TO "RTC" 
+RAMSIZE(256) 

@@ -1,0 +1,91 @@
+C51 COMPILER V9.01   FIXFUNC                                                               02/09/2019 20:00:05 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE FIXFUNC
+OBJECT MODULE PLACED IN fixFunc.OBJ
+COMPILER INVOKED BY: E:\keil_class\C51\BIN\C51.EXE fixFunc.c BROWSE DEBUG OBJECTEXTEND TABS(2)
+
+line level    source
+
+   1          #define MAIN_Fosc   22118400L //定义主时钟
+   2          
+   3          #include  "STC15Fxxxx.H"
+   4          /******************************/
+   5          
+   6          u8 code T_KeyTable[16] = {0,1,2,0,3,0,0,0,4,0,0,0,0,0,0,0};
+   7          extern u8 IO_KeyState, IO_KeyState1, IO_KeyHoldCnt; //行列键盘变量
+   8          extern u8 KeyHoldCnt; //键按下计时
+   9          extern u8 KeyCode;  //给用户使用的键码, 1~16有效
+  10          extern u8 cnt50ms;
+  11          
+  12          
+  13          void IO_KeyDelay(void)
+  14          {
+  15   1        u8 i;
+  16   1        i = 60;
+  17   1        while(--i)  ;
+  18   1      }
+  19          
+  20          void  IO_KeyScan(void)  //50ms call
+  21          {
+  22   1        u8  j;
+  23   1      
+  24   1        j = IO_KeyState1; //保存上一次状态
+  25   1      
+  26   1        P0 = 0xf0;  //X低，读Y
+  27   1        IO_KeyDelay();
+  28   1        IO_KeyState1 = P0 & 0xf0;
+  29   1      
+  30   1        P0 = 0x0f;  //Y低，读X
+  31   1        IO_KeyDelay();
+  32   1        IO_KeyState1 |= (P0 & 0x0f);
+  33   1        IO_KeyState1 ^= 0xff; //取反
+  34   1        
+  35   1        if(j == IO_KeyState1) //连续两次读相等
+  36   1        {
+  37   2          j = IO_KeyState;
+  38   2          IO_KeyState = IO_KeyState1;
+  39   2          if(IO_KeyState != 0)  //有键按下
+  40   2          {
+  41   3            F0 = 0;
+  42   3            if(j == 0)  F0 = 1; //第一次按下
+  43   3            else if(j == IO_KeyState)
+  44   3            {
+  45   4              if(++IO_KeyHoldCnt >= 20) //1秒后重键
+  46   4              {
+  47   5                IO_KeyHoldCnt = 18;
+  48   5                F0 = 1;
+  49   5              }
+  50   4            }
+  51   3            if(F0)
+  52   3            {
+  53   4              j = T_KeyTable[IO_KeyState >> 4];
+  54   4              if((j != 0) && (T_KeyTable[IO_KeyState& 0x0f] != 0)) 
+  55   4                KeyCode = (j - 1) * 4 + T_KeyTable[IO_KeyState & 0x0f] + 16;  //计算键码，17~32
+C51 COMPILER V9.01   FIXFUNC                                                               02/09/2019 20:00:05 PAGE 2   
+
+  56   4            }
+  57   3          }
+  58   2          else  IO_KeyHoldCnt = 0;
+  59   2        }
+  60   1        P0 = 0xff;
+  61   1      }
+  62          
+  63          
+  64           #define MAIN_Fosc    22118400L //定义主时钟
+  65          
+  66          #include  "STC15Fxxxx.H"
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    119    ----
+   CONSTANT SIZE    =     16    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
