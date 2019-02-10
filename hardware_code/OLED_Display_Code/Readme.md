@@ -8,9 +8,9 @@
 
 # 运行测试
 
-![image1](/pic/image1.jpg/)
+![image1](https://github.com/DDL2-11/embedded-access_control/blob/master/hardware_code/OLED_Display_Code/pic/image1.jpg)
 
-![image2](/pic/image2.jpg/)
+![image2](https://github.com/DDL2-11/embedded-access_control/blob/master/hardware_code/OLED_Display_Code/pic/image2.jpg)
 
-![image3](/pic/image3.jpg/)
+![image3](https://github.com/DDL2-11/embedded-access_control/blob/master/hardware_code/OLED_Display_Code/pic/image3.jpg)
 
