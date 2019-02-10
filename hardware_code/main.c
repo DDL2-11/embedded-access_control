@@ -670,7 +670,7 @@ u8 *my_itoa(u16 n)
 void connect_init()
 {
 	char *e = "AT+CIPMUX=1\r\n";
-	char *f = "AT+CIPSERVER=1,8080\r\n";
+	char *f = "AT+CIPSERVER=1,8888\r\n";
 	
 	while(*e != '\0') {
 		SBUF = *e;
